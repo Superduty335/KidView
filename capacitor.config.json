@@ -1,0 +1,7 @@
+{
+  "appId": "com.superduty335.kidview",
+  "appName": "KidView",
+  "webDir": "www",
+  "backgroundColor": "#eaf3ff",
+  "android": { "allowMixedContent": false }
+}

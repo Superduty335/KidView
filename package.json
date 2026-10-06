@@ -1,0 +1,17 @@
+{
+  "name": "kidview",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KidView kids app as native Android and iOS apps (Capacitor).",
+  "scripts": {
+    "sync": "cap sync",
+    "android": "cap sync android && cap open android",
+    "ios": "cap sync ios && cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2"
+  }
+}

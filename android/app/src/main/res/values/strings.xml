@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">KidView</string>
+    <string name="title_activity_main">KidView</string>
+    <string name="package_name">com.superduty335.kidview</string>
+    <string name="custom_url_scheme">com.superduty335.kidview</string>
+</resources>
