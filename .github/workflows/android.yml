@@ -24,8 +24,20 @@ jobs:
           java-version: 21
       - run: npm ci
       - run: npx cap sync android
+      - name: Write the signing key
+        env:
+          KIDVIEW_KEYSTORE: ${{ secrets.KIDVIEW_KEYSTORE }}
+        run: |
+          if [ -n "$KIDVIEW_KEYSTORE" ]; then
+            echo "$KIDVIEW_KEYSTORE" | base64 -d > android/app/kidview.keystore
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "::error::Add the KIDVIEW_KEYSTORE secret so updates install over the old app."
+            exit 1
+          fi
       - name: Build APK
         working-directory: android
+        env:
+          KIDVIEW_KEY_PASSWORD: kidview
         run: ./gradlew assembleDebug --no-daemon
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk KidView.apk
