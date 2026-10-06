@@ -60,7 +60,13 @@ function modal(html, cls = '') {
   m.hidden = false;
   return m.firstElementChild;
 }
-function closeModal() { const m = $('#modal'); m.hidden = true; m.innerHTML = ''; }
+// Pass the sheet to close only that sheet, so a late close from an old
+// dialog can never close the dialog that replaced it.
+function closeModal(sheet) {
+  const m = $('#modal');
+  if (sheet && m.firstElementChild !== sheet) return;
+  m.hidden = true; m.innerHTML = '';
+}
 
 function pinPad(title, sub = '') {
   return new Promise((resolve) => {
@@ -76,14 +82,15 @@ function pinPad(title, sub = '') {
         <button class="pin-key pin-ghost" data-k="b" aria-label="Delete">⌫</button>
       </div>`, 'pin-sheet');
     const dots = [...el.querySelectorAll('.pin-dots i')];
+    let finished = false; // extra taps after the 4th digit must not finish twice
     el.addEventListener('click', (e) => {
       const k = e.target.closest('[data-k]')?.dataset.k;
-      if (!k) return;
-      if (k === 'x') { closeModal(); resolve(null); return; }
+      if (!k || finished) return;
+      if (k === 'x') { finished = true; closeModal(el); resolve(null); return; }
       if (k === 'b') val = val.slice(0, -1);
       else if (val.length < 4) val += k;
       dots.forEach((d, i) => d.classList.toggle('on', i < val.length));
-      if (val.length === 4) setTimeout(() => { closeModal(); resolve(val); }, 120);
+      if (val.length === 4) { finished = true; setTimeout(() => { closeModal(el); resolve(val); }, 150); }
     });
   });
 }
@@ -112,7 +119,7 @@ function confirmBox(title, sub, yes = 'Yes', danger = false) {
     el.addEventListener('click', (e) => {
       const c = e.target.closest('[data-c]')?.dataset.c;
       if (c === undefined) return;
-      closeModal(); resolve(c === '1');
+      closeModal(el); resolve(c === '1');
     });
   });
 }
@@ -131,7 +138,8 @@ function quiz(kid) {
         ${(q.kind === 'build' ? q.tiles : q.options).map((o, i) => `<button class="toy quiz-opt ${['toy-sun', 'toy-sky', 'toy-grass', 'toy-tomato'][i % 4]}" data-o="${esc(o)}" data-i="${i}">${esc(o)}</button>`).join('')}
       </div>
       <button class="btn btn-quiet quiz-skip" data-skip>Not now</button>`, 'quiz-sheet');
-    const done = (ok) => { closeModal(); resolve(ok); };
+    let settled = false;
+    const done = (ok) => { if (settled) return; settled = true; closeModal(el); resolve(ok); };
     const wrong = () => {
       el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
       toast('Almost! Try again.', 1400);
@@ -192,7 +200,7 @@ function kidForm(p) {
       const av = e.target.closest('[data-av]'), col = e.target.closest('[data-col]');
       if (av) { p.avatar = av.dataset.av; el.querySelectorAll('[data-av]').forEach((b) => b.classList.toggle('on', b === av)); }
       if (col) { p.color = col.dataset.col; el.querySelectorAll('[data-col]').forEach((b) => b.classList.toggle('on', b === col)); }
-      if (e.target.closest('[data-cancel]')) { closeModal(); resolve(null); }
+      if (e.target.closest('[data-cancel]')) { closeModal(el); resolve(null); }
     });
     $('#kidform').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -201,7 +209,7 @@ function kidForm(p) {
       p.age = +f.get('age');
       if (isNew) S.profiles.push(p);
       await saveProfiles();
-      closeModal(); resolve(p);
+      closeModal(el); resolve(p);
     });
   });
 }
@@ -855,7 +863,7 @@ async function playVideo(id) {
   const el = modal(`
     <video class="vplayer" src="${url}" controls autoplay playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture></video>
     <button class="close-video toy-small" aria-label="Close video">×</button>`, 'video-sheet');
-  const close = () => { URL.revokeObjectURL(url); closeModal(); };
+  const close = () => { URL.revokeObjectURL(url); closeModal(el); };
   el.querySelector('.close-video').addEventListener('click', close);
 }
 
